@@ -1,4 +1,4 @@
-import { createPublicClient, http, type Hash, type WalletClient } from 'viem';
+import { createPublicClient, http, parseEther, type Hash, type WalletClient } from 'viem';
 import { ritualChain, RITUAL_RPC } from '@/lib/ritual';
 
 const publicClient = createPublicClient({
@@ -6,7 +6,11 @@ const publicClient = createPublicClient({
   transport: http(RITUAL_RPC),
 });
 
-/** Opening fee: self-transfer with READ calldata (user pays gas, visible on explorer) */
+/** Ritual rejects EOA transfers with calldata — use a plain value transfer instead */
+export const BURN_ADDRESS = '0x000000000000000000000000000000000000dEaD' as const;
+export const READING_FEE_WEI = parseEther('0.00001');
+
+/** Opening fee: small RITUAL transfer (user pays gas + fee, visible on explorer) */
 export async function paySoulReadingFee(
   walletClient: WalletClient,
   userAddress: `0x${string}`
@@ -14,9 +18,8 @@ export async function paySoulReadingFee(
   const hash = await walletClient.sendTransaction({
     account: userAddress,
     chain: ritualChain,
-    to: userAddress,
-    value: BigInt(0),
-    data: '0x52454144' as `0x${string}`,
+    to: BURN_ADDRESS,
+    value: READING_FEE_WEI,
   });
 
   await publicClient.waitForTransactionReceipt({ hash, timeout: 120_000 });

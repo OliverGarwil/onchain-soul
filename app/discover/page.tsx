@@ -79,7 +79,7 @@ export default function DiscoverSoul() {
 
     try {
       const walletClient = await resolveWalletClient(config, address);
-      setStatusNote('Confirm the soul reading fee in your wallet (one on-chain transaction)…');
+      setStatusNote('Confirm the soul reading fee in your wallet (0.00001 RITUAL + gas)…');
       setProgress(25);
 
       const readingHash = await paySoulReadingFee(walletClient, address);
