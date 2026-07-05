@@ -4,15 +4,18 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Loader2, Sparkles } from 'lucide-react';
-import { useAccount, useWalletClient } from 'wagmi';
+import { useAccount, useChainId, useConfig } from 'wagmi';
 import { SoulCard, type SoulData, type SoulArchetype } from '@/components/SoulCard';
 import { DimensionRadar } from '@/components/DimensionRadar';
 import { TimeDistributionView } from '@/components/TimeDistributionView';
 import { ConnectButton } from '@/components/ConnectButton';
 import { analyzeWallet, soulFromAnalysis, type WalletAnalysis } from '@/lib/analyzeWallet';
 import type { SoulResult } from '@/lib/soulFormula';
+import { resolveWalletClient } from '@/lib/ritual/client';
+import { paySoulReadingFee } from '@/lib/ritual/readingFee';
 import { generateBiographyOnChain } from '@/lib/ritual/llm';
 import { anchorSoulOnChain } from '@/lib/ritual/anchor';
+import { ritualChain } from '@/lib/ritual';
 import type { Hash } from 'viem';
 
 const MOCK_BIOGRAPHIES: Record<SoulArchetype, string> = {
@@ -40,47 +43,68 @@ const MOCK_TRAITS: Record<SoulArchetype, string[]> = {
 };
 
 export default function DiscoverSoul() {
+  const config = useConfig();
+  const chainId = useChainId();
   const { address, isConnected } = useAccount();
-  const { data: walletClient } = useWalletClient();
-  const [step, setStep] = useState<'idle' | 'analyzing' | 'generating' | 'reveal'>('idle');
+  const [step, setStep] = useState<'idle' | 'opening' | 'analyzing' | 'generating' | 'reveal'>('idle');
   const [soul, setSoul] = useState<SoulData | null>(null);
   const [progress, setProgress] = useState(0);
   const [formulaResult, setFormulaResult] = useState<SoulResult | null>(null);
   const [analysis, setAnalysis] = useState<WalletAnalysis | null>(null);
   const [timeProfile, setTimeProfile] = useState<WalletAnalysis['timeProfile'] | null>(null);
+  const [readingTxHash, setReadingTxHash] = useState<Hash | null>(null);
   const [llmTxHash, setLlmTxHash] = useState<Hash | null>(null);
   const [onChainBio, setOnChainBio] = useState(false);
   const [minting, setMinting] = useState(false);
+  const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusNote, setStatusNote] = useState<string | null>(null);
 
   const runAnalysis = async () => {
-    if (!address || !walletClient) return;
+    if (!address) return;
 
+    if (chainId !== ritualChain.id) {
+      setError('Switch to Ritual testnet (Chain ID 1979) before starting.');
+      return;
+    }
+
+    setStarting(true);
     setError(null);
     setStatusNote(null);
+    setReadingTxHash(null);
     setLlmTxHash(null);
     setOnChainBio(false);
-    setStep('analyzing');
-    setProgress(0);
-
-    const progressTimer = setInterval(() => {
-      setProgress((p) => Math.min(95, p + Math.random() * 12 + 4));
-    }, 300);
+    setStep('opening');
+    setProgress(10);
 
     try {
+      const walletClient = await resolveWalletClient(config, address);
+      setStatusNote('Confirm the soul reading fee in your wallet (one on-chain transaction)…');
+      setProgress(25);
+
+      const readingHash = await paySoulReadingFee(walletClient, address);
+      setReadingTxHash(readingHash);
+      setStep('analyzing');
+      setProgress(35);
+      setStatusNote('Reading fee confirmed. Scanning your on-chain history…');
+
+      const progressTimer = setInterval(() => {
+        setProgress((p) => Math.min(95, p + Math.random() * 12 + 4));
+      }, 300);
+
       const walletAnalysis = await analyzeWallet(address);
       clearInterval(progressTimer);
       setProgress(100);
       setAnalysis(walletAnalysis);
       setTimeProfile(walletAnalysis.timeProfile);
+      setStatusNote(null);
 
       setStep('generating');
       setProgress(20);
 
       const result = soulFromAnalysis(walletAnalysis);
       let biography = MOCK_BIOGRAPHIES[result.archetype as SoulArchetype];
-      let txHash = walletAnalysis.txs[0]?.hash ?? walletAnalysis.address;
+      let txHash = readingHash;
 
       setProgress(40);
       setStatusNote('Invoking Ritual LLM precompile (0x0802)…');
@@ -130,20 +154,26 @@ export default function DiscoverSoul() {
       setSoul(soulData);
       setFormulaResult(result);
       setStep('reveal');
-    } catch {
-      clearInterval(progressTimer);
-      setError('Failed to read on-chain data. Connect to Ritual testnet (1979) and ensure you have test RITUAL.');
+    } catch (e) {
+      setError(
+        e instanceof Error
+          ? e.message
+          : 'Failed to start soul reading. Connect to Ritual testnet (1979) and ensure you have test RITUAL.'
+      );
       setStep('idle');
+    } finally {
+      setStarting(false);
     }
   };
 
   const handleMint = async () => {
-    if (!address || !walletClient || !soul || !formulaResult) return;
+    if (!address || !soul || !formulaResult) return;
 
     setMinting(true);
     setError(null);
 
     try {
+      const walletClient = await resolveWalletClient(config, address);
       const hash = await anchorSoulOnChain(walletClient, address, {
         archetype: soul.archetype,
         address: soul.id,
@@ -166,9 +196,11 @@ export default function DiscoverSoul() {
     setFormulaResult(null);
     setAnalysis(null);
     setTimeProfile(null);
+    setReadingTxHash(null);
     setLlmTxHash(null);
     setOnChainBio(false);
     setProgress(0);
+    setStarting(false);
     setError(null);
     setStatusNote(null);
   };
@@ -208,37 +240,57 @@ export default function DiscoverSoul() {
                   <ConnectButton variant="hero" className="inline-flex items-center gap-3" />
                   <div className="text-xs text-white/40">Connect a Ritual testnet wallet first (Chain ID 1979)</div>
                 </div>
-              ) : !walletClient ? (
-                <p className="text-sm text-white/50">Initializing wallet client…</p>
               ) : (
                 <button
                   onClick={runAnalysis}
-                  className="px-12 h-14 rounded-2xl bg-white text-black text-lg font-medium inline-flex items-center gap-3 active:bg-white/90"
+                  disabled={starting}
+                  className="px-12 h-14 rounded-2xl bg-white text-black text-lg font-medium inline-flex items-center gap-3 active:bg-white/90 disabled:opacity-60"
                 >
-                  Begin soul reading <Sparkles className="w-5 h-5" />
+                  {starting ? 'Opening wallet…' : 'Begin soul reading'} <Sparkles className="w-5 h-5" />
                 </button>
+              )}
+
+              {isConnected && chainId !== ritualChain.id && (
+                <p className="mt-4 text-sm text-amber-200/90">Switch to Ritual testnet (1979) to continue.</p>
               )}
 
               {error && <p className="mt-6 text-sm text-red-300/90">{error}</p>}
             </motion.div>
           )}
 
+          {step === 'opening' && (
+            <motion.div key="opening" className="text-center max-w-md">
+              <div className="text-xs tracking-[3px] text-white/40 mb-4">STEP 02 — OPEN THE RITUAL</div>
+              <div className="text-5xl tracking-[-1.5px] mb-8">Confirm your reading fee on-chain…</div>
+              <div className="flex justify-center mb-8">
+                <Loader2 className="w-8 h-8 animate-spin text-white/70" />
+              </div>
+              <div className="font-mono text-sm text-white/60 mb-3">{Math.floor(progress)}%</div>
+              <div className="h-px w-full bg-white/10 overflow-hidden mb-4">
+                <div className="h-px bg-white transition-all" style={{ width: `${progress}%` }} />
+              </div>
+              {statusNote && <p className="text-xs text-white/45">{statusNote}</p>}
+            </motion.div>
+          )}
+
           {step === 'analyzing' && (
             <motion.div key="analyzing" className="text-center max-w-md">
-              <div className="text-xs tracking-[3px] text-white/40 mb-4">STEP 02 — READING THE LEDGER</div>
+              <div className="text-xs tracking-[3px] text-white/40 mb-4">STEP 03 — READING THE LEDGER</div>
               <div className="text-5xl tracking-[-1.5px] mb-8">Scanning your on-chain history...</div>
               <div className="h-px bg-white/10 mb-6" />
               <div className="font-mono text-sm text-white/60 mb-3">{Math.floor(progress)}% COMPLETE</div>
               <div className="h-px w-full bg-white/10 overflow-hidden">
                 <div className="h-px bg-white transition-all" style={{ width: `${progress}%` }} />
               </div>
-              <div className="mt-6 text-xs text-white/40">Reading blocks • Decoding calls • Mapping interactions</div>
+              <div className="mt-6 text-xs text-white/40">
+                {statusNote ?? 'Reading blocks • Decoding calls • Mapping interactions'}
+              </div>
             </motion.div>
           )}
 
           {step === 'generating' && (
             <motion.div key="generating" className="text-center max-w-md">
-              <div className="text-xs tracking-[3px] text-white/40 mb-4">STEP 03 — INVOKING THE PRECOMPILES</div>
+              <div className="text-xs tracking-[3px] text-white/40 mb-4">STEP 04 — INVOKING THE PRECOMPILES</div>
               <div className="text-5xl tracking-[-1.5px] mb-8">The TEE is writing your story...</div>
               <div className="flex justify-center mb-8">
                 <Loader2 className="w-8 h-8 animate-spin text-white/70" />
@@ -269,6 +321,16 @@ export default function DiscoverSoul() {
                     <span className="px-3 py-1 rounded-full border border-white/10 text-white/50">
                       DATA: {analysis.source === 'explorer' ? 'EXPLORER API' : 'ON-CHAIN RPC'}
                     </span>
+                    {readingTxHash && (
+                      <a
+                        href={`https://explorer.ritualfoundation.org/tx/${readingTxHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1 rounded-full border border-white/10 text-white/50 hover:text-white"
+                      >
+                        VIEW READING TX
+                      </a>
+                    )}
                     {onChainBio && (
                       <span className="px-3 py-1 rounded-full border border-emerald-400/30 text-emerald-200/80">
                         BIO: LLM 0x0802 ON-CHAIN

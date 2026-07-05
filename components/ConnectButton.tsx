@@ -1,6 +1,7 @@
 'use client';
 
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
+import { ritualChain } from '@/lib/ritual';
 
 type Variant = 'nav' | 'hero' | 'discover';
 
@@ -42,7 +43,7 @@ export function ConnectButton({ variant = 'nav', className = '' }: ConnectButton
     <button
       type="button"
       disabled={isPending}
-      onClick={() => connect({ connector: connectors[0] })}
+      onClick={() => connect({ connector: connectors[0], chainId: ritualChain.id })}
       className={`${base} disabled:opacity-60 ${className}`}
     >
       {isPending ? 'Connecting…' : 'Connect Wallet'}
