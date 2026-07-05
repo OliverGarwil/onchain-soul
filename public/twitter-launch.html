@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Onchain Soul — Twitter Launch</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #111;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+    }
+    .card {
+      width: 1200px;
+      height: 675px;
+      position: relative;
+      overflow: hidden;
+      background: #0B2E26;
+      color: #F4F4EF;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .grid {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 72px 72px;
+      opacity: 0.35;
+    }
+    .glow {
+      position: absolute;
+      width: 520px;
+      height: 520px;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.35;
+    }
+    .glow-a { top: -180px; right: -80px; background: #8b5cf6; }
+    .glow-b { bottom: -220px; left: -120px; background: #14b8a6; }
+    .inner {
+      position: relative;
+      z-index: 2;
+      height: 100%;
+      padding: 48px 56px;
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 40px;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      letter-spacing: 2.5px;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 18px;
+    }
+    h1 {
+      font-size: 62px;
+      line-height: 0.95;
+      letter-spacing: -2.5px;
+      font-weight: 650;
+      margin-bottom: 14px;
+    }
+    .sub {
+      font-size: 26px;
+      color: rgba(255,255,255,0.58);
+      letter-spacing: -0.4px;
+      margin-bottom: 36px;
+      max-width: 18ch;
+    }
+    .steps {
+      list-style: none;
+      display: grid;
+      gap: 12px;
+    }
+    .steps li {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      letter-spacing: 1.2px;
+      color: rgba(255,255,255,0.72);
+    }
+    .steps span { color: rgba(255,255,255,0.35); margin-right: 8px; }
+    .soul {
+      align-self: center;
+      border-radius: 24px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: #05241F;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.45);
+    }
+    .soul-bar { height: 3px; background: #f59e0b; }
+    .soul-head {
+      padding: 22px 24px 16px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .soul-label {
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: rgba(255,255,255,0.38);
+      margin-bottom: 6px;
+    }
+    .soul-title {
+      font-size: 30px;
+      letter-spacing: -1px;
+      line-height: 1;
+      font-weight: 650;
+    }
+    .soul-id {
+      text-align: right;
+      font-family: ui-monospace, monospace;
+      font-size: 13px;
+      color: rgba(255,255,255,0.55);
+    }
+    .soul-visual {
+      height: 180px;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(245,158,11,0.35), transparent 55%),
+        radial-gradient(circle at 70% 60%, rgba(139,92,246,0.28), transparent 50%),
+        linear-gradient(180deg, #0f3d34, #05241F);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .soul-visual::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent, rgba(0,0,0,0.55));
+    }
+    .orb {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: radial-gradient(circle, rgba(255,255,255,0.18), rgba(255,255,255,0.02));
+      box-shadow: 0 0 40px rgba(245,158,11,0.25);
+      z-index: 1;
+    }
+    .soul-body {
+      padding: 20px 24px 22px;
+      font-size: 15px;
+      line-height: 1.45;
+      color: rgba(255,255,255,0.82);
+    }
+    .traits {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 0 24px 22px;
+    }
+    .trait {
+      font-size: 10px;
+      letter-spacing: 1px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.55);
+    }
+    .footer {
+      position: absolute;
+      left: 56px;
+      right: 56px;
+      bottom: 34px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 3;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding-top: 18px;
+    }
+    .brand {
+      font-size: 14px;
+      letter-spacing: 3px;
+      font-weight: 650;
+    }
+    .tag {
+      font-size: 12px;
+      color: rgba(255,255,255,0.42);
+      letter-spacing: 0.3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card" id="twitter-card">
+    <div class="grid"></div>
+    <div class="glow glow-a"></div>
+    <div class="glow glow-b"></div>
+    <div class="inner">
+      <div>
+        <div class="badge">RITUAL CHAIN • 1979</div>
+        <h1>Your chain<br>has a soul.</h1>
+        <p class="sub">Now it has a voice.</p>
+        <ul class="steps">
+          <li><span>01</span>SCAN YOUR ON-CHAIN HISTORY</li>
+          <li><span>02</span>7-DIMENSIONAL SOUL FORMULA</li>
+          <li><span>03</span>AI BIOGRAPHY VIA LLM PRECOMPILE</li>
+          <li><span>04</span>ANCHOR YOUR SOUL ON RITUAL</li>
+        </ul>
+      </div>
+      <div class="soul">
+        <div class="soul-bar"></div>
+        <div class="soul-head">
+          <div>
+            <div class="soul-label">RITUAL CHAIN • 1979</div>
+            <div class="soul-title">The Ritual Weaver</div>
+          </div>
+          <div class="soul-id">#0x7a3f…c912</div>
+        </div>
+        <div class="soul-visual"><div class="orb"></div></div>
+        <div class="soul-body">
+          You treat the chain as ceremony. Every interaction is part of a larger pattern you are still learning to read.
+        </div>
+        <div class="traits">
+          <span class="trait">CEREMONIAL</span>
+          <span class="trait">PATTERNED</span>
+          <span class="trait">REFLECTIVE</span>
+          <span class="trait">MYTHIC</span>
+        </div>
+      </div>
+    </div>
+    <div class="footer">
+      <div class="brand">ONCHAIN SOUL</div>
+      <div class="tag">Discover your on-chain soul • Powered by Ritual AI Precompiles</div>
+    </div>
+  </div>
+</body>
+</html>
