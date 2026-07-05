@@ -9,7 +9,7 @@ import { SoulCard, type SoulData, type SoulArchetype } from '@/components/SoulCa
 import { DimensionRadar } from '@/components/DimensionRadar';
 import { TimeDistributionView } from '@/components/TimeDistributionView';
 import { ConnectButton } from '@/components/ConnectButton';
-import { analyzeWallet, soulFromAnalysis, type WalletAnalysis } from '@/lib/analyzeWallet';
+import { soulFromAnalysis, type WalletAnalysis } from '@/lib/analyzeWallet';
 import type { SoulResult } from '@/lib/soulFormula';
 import { resolveWalletClient } from '@/lib/ritual/client';
 import { paySoulReadingFee } from '@/lib/ritual/readingFee';
@@ -92,7 +92,18 @@ export default function DiscoverSoul() {
         setProgress((p) => Math.min(95, p + Math.random() * 12 + 4));
       }, 300);
 
-      const walletAnalysis = await analyzeWallet(address);
+      const analyzeRes = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address }),
+      });
+
+      if (!analyzeRes.ok) {
+        const detail = (await analyzeRes.json().catch(() => ({}))) as { error?: string };
+        throw new Error(detail.error || 'Failed to analyze on-chain history');
+      }
+
+      const { analysis: walletAnalysis } = (await analyzeRes.json()) as { analysis: WalletAnalysis };
       clearInterval(progressTimer);
       setProgress(100);
       setAnalysis(walletAnalysis);

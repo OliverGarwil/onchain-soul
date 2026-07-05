@@ -45,22 +45,26 @@ const publicClient = createPublicClient({
 
 /** Fetch outgoing transactions for an address from the explorer API */
 async function fetchExplorerTxs(address: string): Promise<ChainTx[]> {
-  const url = `${RITUAL_EXPLORER_API}/addresses/${address}/transactions?filter=from&limit=50`;
-  const res = await fetch(url, { next: { revalidate: 0 } });
-  if (!res.ok) return [];
+  try {
+    const url = `${RITUAL_EXPLORER_API}/addresses/${address}/transactions?filter=from&limit=50`;
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) return [];
 
-  const data = (await res.json()) as { items?: ExplorerTx[] };
-  if (!data.items?.length) return [];
+    const data = (await res.json()) as { items?: ExplorerTx[] };
+    if (!data.items?.length) return [];
 
-  return data.items.map((tx) => ({
-    hash: tx.hash as Hash,
-    to: tx.to?.hash ?? null,
-    value: BigInt(tx.value || '0'),
-    gasPrice: BigInt(tx.gas_price || '0'),
-    gasUsed: BigInt(tx.gas_used || '0'),
-    status: tx.status === 'ok' ? 'success' : 'failed',
-    timestamp: new Date(tx.timestamp).getTime() / 1000,
-  }));
+    return data.items.map((tx) => ({
+      hash: tx.hash as Hash,
+      to: tx.to?.hash ?? null,
+      value: BigInt(tx.value || '0'),
+      gasPrice: BigInt(tx.gas_price || '0'),
+      gasUsed: BigInt(tx.gas_used || '0'),
+      status: tx.status === 'ok' ? 'success' : 'failed',
+      timestamp: new Date(tx.timestamp).getTime() / 1000,
+    }));
+  } catch {
+    return [];
+  }
 }
 
 /** Build 24h time-slot distribution from transaction timestamps */
