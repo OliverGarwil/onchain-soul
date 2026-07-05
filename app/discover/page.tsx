@@ -9,6 +9,7 @@ import { SoulCard, type SoulData, type SoulArchetype } from '@/components/SoulCa
 import { DimensionRadar } from '@/components/DimensionRadar';
 import { TimeDistributionView } from '@/components/TimeDistributionView';
 import { ConnectButton } from '@/components/ConnectButton';
+import { SiteDisclaimer } from '@/components/SiteDisclaimer';
 import { soulFromAnalysis, type WalletAnalysis } from '@/lib/analyzeWallet';
 import type { SoulResult } from '@/lib/soulFormula';
 import { resolveWalletClient } from '@/lib/ritual/client';
@@ -242,9 +243,13 @@ export default function DiscoverSoul() {
                 <br />
                 read you.
               </h1>
-              <p className="text-xl text-white/60 mb-10">
+              <p className="text-xl text-white/60 mb-8">
                 We analyze your Ritual on-chain history and derive your soul from real behavior.
               </p>
+
+              <div className="mb-8 px-4">
+                <SiteDisclaimer compact />
+              </div>
 
               {!isConnected ? (
                 <div className="space-y-4">
