@@ -21,17 +21,17 @@ export function ConnectButton({ variant = 'nav', className = '' }: ConnectButton
 
   const base =
     variant === 'nav'
-      ? 'px-5 py-2 rounded-full bg-white text-black text-sm font-medium hover:bg-white/90 transition-all active:scale-[0.985]'
+      ? 'px-5 py-2 rounded-full bg-white text-black text-sm font-medium hover:bg-white/90 transition-all active:scale-[0.985] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50'
       : variant === 'hero'
-        ? 'px-9 h-14 rounded-2xl bg-white text-black text-lg font-medium hover:bg-white/90 transition-all'
-        : 'px-10 h-12 rounded-2xl bg-white text-black text-sm font-medium hover:bg-white/90 transition-all';
+        ? 'px-9 h-14 rounded-2xl bg-white text-black text-lg font-medium hover:bg-white/90 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50'
+        : 'px-10 h-12 rounded-2xl bg-white text-black text-sm font-medium hover:bg-white/90 transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50';
 
   if (isConnected && address) {
     return (
       <button
         type="button"
         onClick={() => disconnect()}
-        className={`${base} ${className}`}
+        className={`${base} ring-1 ring-white/20 ${className}`}
         title="Click to disconnect wallet"
       >
         {truncate(address)}

@@ -28,8 +28,11 @@ export function TimeDistributionView({ profile }: TimeDistributionViewProps) {
             <span className="text-white/60">{SLOT_LABELS[slot]}</span>
             <span className="font-mono text-white/50 tabular-nums">{pct}%</span>
           </div>
-          <div className="h-px w-full bg-white/10 relative">
-            <div className="absolute top-0 left-0 h-px bg-white/50" style={{ width: `${pct}%` }} />
+          <div className="relative h-1 w-full overflow-hidden rounded-full bg-white/10">
+            <div
+              className="absolute inset-y-0 left-0 rounded-full bg-white/55 transition-[width] duration-500"
+              style={{ width: `${pct}%` }}
+            />
           </div>
         </div>
       ))}
