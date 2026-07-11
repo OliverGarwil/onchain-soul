@@ -89,17 +89,17 @@ export default function OnchainSoulLanding() {
               {
                 num: '01',
                 title: 'Connect',
-                desc: 'Link your Ritual wallet. We read your on-chain history — every contract, every interaction, every trace you left.',
+                desc: 'Link your Ritual wallet on testnet (Chain ID 1979). We index your full on-chain footprint via the Ritual Explorer API — contract calls, gas patterns, token flows, interaction frequency, and temporal signatures across every block you signed.',
               },
               {
                 num: '02',
                 title: 'AI reads you',
-                desc: "Ritual LLM (0x0802) analyzes your behavior inside a TEE. It doesn't guess — it studies the actual transactions you signed.",
+                desc: 'A 7-dimensional soul model is computed from your behavior, then fed to the Ritual LLM precompile (0x0802) running inside a TEE. The model studies actual signed transactions — not metadata — to derive your archetype and draft an attested biography on-chain.',
               },
               {
                 num: '03',
                 title: 'Receive your soul',
-                desc: 'You get a living soul card: personality archetype, written biography, and generative PFP. Anchor it on-chain.',
+                desc: 'You receive a living soul card: archetype classification, TEE-attested biography, generative PFP from the Image precompile (0x0818), and a 7-dimensional trait breakdown. Optionally anchor the full record on Ritual via a self-anchored transaction.',
               },
             ].map((step) => (
               <div
@@ -110,7 +110,7 @@ export default function OnchainSoulLanding() {
                   {step.num}
                 </div>
                 <div className="mb-4 mt-2 text-2xl tracking-[-1px] sm:text-3xl">{step.title}</div>
-                <p className="text-base leading-snug text-white/60 sm:text-lg">{step.desc}</p>
+                <p className="text-sm leading-relaxed text-white/55 sm:text-[15px] sm:leading-relaxed">{step.desc}</p>
               </div>
             ))}
           </div>
