@@ -52,20 +52,18 @@ export default function OnchainSoulLanding() {
             {...fadeUp}
             className="mb-6 text-[2.75rem] font-semibold leading-[0.95] tracking-[-3px] sm:text-7xl md:text-[88px] md:tracking-[-4.5px]"
           >
-            Your chain
+            <span className="text-white/55">Every wallet</span>
             <br />
-            has a soul.
+            <span className="text-white/55">has a soul.</span>
             <br />
-            Now it has a voice.
+            <span className="text-white">Now it speaks.</span>
           </motion.h1>
 
           <motion.p
             {...fadeUp}
-            className="mx-auto mb-10 max-w-md text-lg leading-snug tracking-[-0.25px] text-white/60 sm:text-[21px]"
+            className="mx-auto mb-10 max-w-md text-lg leading-snug tracking-[-0.25px] text-white/55 sm:text-[21px]"
           >
-            AI reads every transaction you&apos;ve made on Ritual.
-            <br />
-            Then writes the story only you could live.
+            On-chain AI reads your Ritual history — then writes the story only you could live.
           </motion.p>
 
           <motion.div {...fadeUp} className="flex flex-col items-center justify-center gap-4 sm:flex-row">
