@@ -121,6 +121,10 @@ export default function DiscoverSoul() {
   const [statusNote, setStatusNote] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(true);
 
+  const canAnchor = Boolean(
+    soul && formulaResult && isConnected && address && chainId === ritualChain.id && !minting
+  );
+
   const showStepIndicator = step !== 'reveal';
   const currentStep = useMemo(() => stepIndex(step), [step]);
 
@@ -367,7 +371,18 @@ export default function DiscoverSoul() {
   };
 
   const handleMint = async () => {
-    if (!address || !soul || !formulaResult) return;
+    if (!soul || !formulaResult) {
+      setError('Soul data missing. Refresh the page or start a new reading.');
+      return;
+    }
+    if (!address || !isConnected) {
+      setError('Reconnect your wallet to anchor on-chain.');
+      return;
+    }
+    if (chainId !== ritualChain.id) {
+      setError('Switch to Ritual testnet (Chain ID 1979) before anchoring.');
+      return;
+    }
 
     setMinting(true);
     setError(null);
@@ -432,7 +447,7 @@ export default function DiscoverSoul() {
       }
       className="flex flex-col"
     >
-      <div className="flex flex-1 flex-col items-center justify-center px-5 py-10 pb-20 sm:px-6 sm:py-12 sm:pb-16">
+      <div className="flex flex-1 flex-col items-center justify-center px-5 py-10 pb-28 sm:px-6 sm:py-12 sm:pb-20">
         {showStepIndicator && <StepIndicator current={currentStep} />}
 
         <AnimatePresence mode="wait">
@@ -517,7 +532,7 @@ export default function DiscoverSoul() {
               key="reveal"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="w-full max-w-[1080px]"
+              className="w-full max-w-[1080px] min-w-0 overflow-x-hidden"
             >
               <div className="mb-10 text-center sm:mb-12">
                 <div className="mb-3 text-4xl tracking-[-1.5px] sm:text-6xl sm:tracking-[-2px]">This is your soul.</div>
@@ -588,7 +603,7 @@ export default function DiscoverSoul() {
                 {statusNote && <p className="mt-3 text-sm text-white/50">{statusNote}</p>}
               </div>
 
-              <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,420px)_1fr] lg:gap-x-12">
+              <div className="grid min-w-0 items-start gap-10 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)] lg:gap-x-12">
                 <div className="mx-auto w-full lg:mx-0">
                   <SoulCard
                     soul={soul}
@@ -598,11 +613,11 @@ export default function DiscoverSoul() {
                   />
                 </div>
 
-                <div className="space-y-8 pt-0 lg:space-y-10 lg:pt-2">
+                <div className="min-w-0 space-y-8 pt-0 lg:space-y-10 lg:pt-2">
                   <div className="rounded-2xl border border-white/10 bg-white/[0.02] px-6 py-7 sm:px-7">
                     <div className="mb-3 text-xs tracking-[2.5px] text-white/40">THE CHAIN SPEAKS</div>
-                    <p className="max-w-[46ch] text-[17px] leading-[1.55] text-white/85">{soul.biography}</p>
-                    <p className="mt-4 max-w-[46ch] text-sm leading-relaxed text-white/45">{formulaResult.explanation}</p>
+                    <p className="max-w-[46ch] break-words text-[17px] leading-[1.55] text-white/85">{soul.biography}</p>
+                    <p className="mt-4 max-w-[46ch] break-words text-sm leading-relaxed text-white/45">{formulaResult.explanation}</p>
                   </div>
 
                   <details className="group rounded-2xl border border-white/10 px-6 py-6 open:bg-white/[0.02] sm:px-7">
@@ -627,24 +642,31 @@ export default function DiscoverSoul() {
                 </div>
               </div>
 
-              <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:mt-12 sm:flex-row">
+              <div className="relative z-20 mt-10 flex w-full flex-col items-center justify-center gap-4 pb-8 sm:mt-12 sm:flex-row sm:pb-12">
                 <button
                   type="button"
                   onClick={reset}
-                  className="h-12 w-full rounded-2xl border border-white/20 text-sm tracking-[0.8px] transition-all hover:bg-white/5 sm:w-auto sm:px-10"
+                  className="relative z-20 h-12 w-full rounded-2xl border border-white/20 text-sm tracking-[0.8px] transition-all hover:bg-white/5 sm:w-auto sm:px-10"
                 >
                   START ANOTHER READING
                 </button>
                 <button
                   type="button"
                   onClick={handleMint}
-                  disabled={minting}
-                  className="h-12 w-full rounded-2xl bg-white text-sm font-medium tracking-[0.8px] text-black transition-all active:bg-white/90 disabled:opacity-60 sm:w-auto sm:px-14"
+                  disabled={!canAnchor}
+                  className="relative z-20 h-12 w-full rounded-2xl bg-white text-sm font-medium tracking-[0.8px] text-black transition-all active:bg-white/90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-14"
                 >
                   {minting ? 'ANCHORING ON CHAIN…' : 'ANCHOR SOUL ON RITUAL'}
                 </button>
               </div>
-              {error && <p className="mt-6 text-center text-sm text-red-300/90">{error}</p>}
+              {step === 'reveal' && soul && (!isConnected || chainId !== ritualChain.id) && (
+                <p className="relative z-20 mt-2 text-center text-sm text-amber-200/90">
+                  {!isConnected
+                    ? 'Reconnect your wallet to anchor on-chain.'
+                    : 'Switch to Ritual testnet (1979) to anchor.'}
+                </p>
+              )}
+              {error && <p className="relative z-20 mt-6 text-center text-sm text-red-300/90">{error}</p>}
             </motion.div>
           )}
         </AnimatePresence>
