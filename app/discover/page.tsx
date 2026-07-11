@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ExternalLink, Loader2, Sparkles } from 'lucide-react';
+import { ArrowLeft, Check, Copy, ExternalLink, Loader2, Sparkles } from 'lucide-react';
 import { useAccount, useChainId, useConfig } from 'wagmi';
 import { SoulCard, type SoulData, type SoulArchetype } from '@/components/SoulCard';
 import { DimensionRadar } from '@/components/DimensionRadar';
@@ -120,6 +120,7 @@ export default function DiscoverSoul() {
   const [error, setError] = useState<string | null>(null);
   const [statusNote, setStatusNote] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(true);
+  const [bioCopied, setBioCopied] = useState(false);
 
   const canAnchor = Boolean(
     soul && formulaResult && isConnected && address && chainId === ritualChain.id && !minting
@@ -370,6 +371,17 @@ export default function DiscoverSoul() {
     }
   };
 
+  const handleCopyBiography = async () => {
+    if (!soul?.biography) return;
+    try {
+      await navigator.clipboard.writeText(soul.biography);
+      setBioCopied(true);
+      setTimeout(() => setBioCopied(false), 2000);
+    } catch {
+      setError('Failed to copy biography to clipboard.');
+    }
+  };
+
   const handleMint = async () => {
     if (!soul || !formulaResult) {
       setError('Soul data missing. Refresh the page or start a new reading.');
@@ -426,6 +438,7 @@ export default function DiscoverSoul() {
     setProgress(0);
     setStarting(false);
     setShareOpen(false);
+    setBioCopied(false);
     setError(null);
     setStatusNote(null);
   };
@@ -615,7 +628,21 @@ export default function DiscoverSoul() {
 
                 <div className="min-w-0 space-y-8 pt-0 lg:space-y-10 lg:pt-2">
                   <div className="rounded-2xl border border-white/10 bg-white/[0.02] px-6 py-7 sm:px-7">
-                    <div className="mb-3 text-xs tracking-[2.5px] text-white/40">THE CHAIN SPEAKS</div>
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <div className="text-xs tracking-[2.5px] text-white/40">THE CHAIN SPEAKS</div>
+                      <button
+                        type="button"
+                        onClick={handleCopyBiography}
+                        className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/15 px-3 py-1.5 text-[10px] tracking-[0.8px] text-white/60 transition-colors hover:border-white/25 hover:text-white"
+                      >
+                        {bioCopied ? (
+                          <Check className="h-3 w-3 text-emerald-400" />
+                        ) : (
+                          <Copy className="h-3 w-3" />
+                        )}
+                        {bioCopied ? 'COPIED' : 'COPY BIOGRAPHY'}
+                      </button>
+                    </div>
                     <p className="max-w-[46ch] break-words text-[17px] leading-[1.55] text-white/85">{soul.biography}</p>
                     <p className="mt-4 max-w-[46ch] break-words text-sm leading-relaxed text-white/45">{formulaResult.explanation}</p>
                   </div>
@@ -642,22 +669,33 @@ export default function DiscoverSoul() {
                 </div>
               </div>
 
-              <div className="relative z-20 mt-10 flex w-full flex-col items-center justify-center gap-4 pb-8 sm:mt-12 sm:flex-row sm:pb-12">
-                <button
-                  type="button"
-                  onClick={reset}
-                  className="relative z-20 h-12 w-full rounded-2xl border border-white/20 text-sm tracking-[0.8px] transition-all hover:bg-white/5 sm:w-auto sm:px-10"
+              <div className="relative z-20 mt-10 flex w-full flex-col items-center justify-center gap-3 pb-8 sm:mt-12 sm:pb-12">
+                <a
+                  href={`https://explorer.ritualfoundation.org/address/${soul.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative z-20 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-white/20 text-sm tracking-[0.8px] text-white/70 transition-all hover:bg-white/5 hover:text-white sm:w-auto sm:px-10"
                 >
-                  START ANOTHER READING
-                </button>
-                <button
-                  type="button"
-                  onClick={handleMint}
-                  disabled={!canAnchor}
-                  className="relative z-20 h-12 w-full rounded-2xl bg-white text-sm font-medium tracking-[0.8px] text-black transition-all active:bg-white/90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-14"
-                >
-                  {minting ? 'ANCHORING ON CHAIN…' : 'ANCHOR SOUL ON RITUAL'}
-                </button>
+                  VIEW ON EXPLORER <ExternalLink className="h-4 w-4" />
+                </a>
+
+                <div className="flex w-full flex-col items-center justify-center gap-4 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={reset}
+                    className="relative z-20 h-12 w-full rounded-2xl border border-white/20 text-sm tracking-[0.8px] transition-all hover:bg-white/5 sm:w-auto sm:px-10"
+                  >
+                    START ANOTHER READING
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleMint}
+                    disabled={!canAnchor}
+                    className="relative z-20 h-12 w-full rounded-2xl bg-white text-sm font-medium tracking-[0.8px] text-black transition-all active:bg-white/90 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-14"
+                  >
+                    {minting ? 'ANCHORING ON CHAIN…' : 'ANCHOR SOUL ON RITUAL'}
+                  </button>
+                </div>
               </div>
               {step === 'reveal' && soul && (!isConnected || chainId !== ritualChain.id) && (
                 <p className="relative z-20 mt-2 text-center text-sm text-amber-200/90">
