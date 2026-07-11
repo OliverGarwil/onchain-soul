@@ -43,30 +43,30 @@ export default function OnchainSoulLanding() {
         <div className="mx-auto max-w-5xl px-5 pb-20 pt-20 text-center sm:px-8 sm:pb-28 sm:pt-28">
           <motion.div
             {...fadeUp}
-            className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-[10px] tracking-[0.5px] sm:text-xs"
+            className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-[10px] tracking-[0.5px] sm:text-xs"
           >
             <Sparkles className="h-3.5 w-3.5" /> POWERED BY RITUAL LLM + IMAGE PRECOMPILES
           </motion.div>
 
           <motion.h1
             {...fadeUp}
-            className="mb-6 text-[2.75rem] font-semibold leading-[0.95] tracking-[-3px] sm:text-7xl md:text-[88px] md:tracking-[-4.5px]"
+            className="font-semibold leading-[0.95] tracking-[-2px] sm:tracking-[-3px]"
           >
-            <span className="text-white/55">Every wallet</span>
-            <br />
-            <span className="text-white/55">has a soul.</span>
-            <br />
-            <span className="text-white">Now it speaks.</span>
+            <span className="block text-[1.75rem] text-white/45 sm:text-5xl md:text-6xl">Every wallet</span>
+            <span className="block text-[1.75rem] text-white/45 sm:text-5xl md:text-6xl">has a soul.</span>
+            <span className="mt-1 block text-[2.75rem] text-white sm:text-7xl md:text-[80px] md:tracking-[-4px]">
+              Now it speaks.
+            </span>
           </motion.h1>
 
           <motion.p
             {...fadeUp}
-            className="mx-auto mb-10 max-w-md text-lg leading-snug tracking-[-0.25px] text-white/55 sm:text-[21px]"
+            className="mx-auto mt-7 max-w-sm text-base leading-snug tracking-[-0.2px] text-white/55 sm:text-lg"
           >
             On-chain AI reads your Ritual history — then writes the story only you could live.
           </motion.p>
 
-          <motion.div {...fadeUp} className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <motion.div {...fadeUp} className="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link
               href="/discover"
               className="group flex h-14 w-full max-w-xs items-center justify-center gap-3 rounded-2xl bg-white px-9 text-lg font-medium text-black transition-all hover:bg-white/90 active:bg-white sm:w-auto"
