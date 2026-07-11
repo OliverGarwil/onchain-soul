@@ -119,6 +119,7 @@ export default function DiscoverSoul() {
   const [shareOpen, setShareOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusNote, setStatusNote] = useState<string | null>(null);
+  const [restoring, setRestoring] = useState(true);
 
   const showStepIndicator = step !== 'reveal';
   const currentStep = useMemo(() => stepIndex(step), [step]);
@@ -139,36 +140,54 @@ export default function DiscoverSoul() {
 
   // 挂载/钱包切换后尝试恢复已生成的 soul
   useEffect(() => {
-    if (!address) return;
+    if (!address) {
+      setRestoring(false);
+      return;
+    }
     const key = `onchain-soul:result:${address.toLowerCase()}`;
     try {
       const raw = localStorage.getItem(key);
-      if (!raw) return;
-      const saved = JSON.parse(raw) as PersistedSoul;
-      if (saved.soul && saved.formulaResult) {
-        setSoul(saved.soul);
-        setFormulaResult(saved.formulaResult);
-        setAnalysis(saved.analysis ?? null);
-        setTimeProfile(saved.timeProfile ?? null);
-        setReadingTxHash(saved.readingTxHash ?? null);
-        setLlmTxHash(saved.llmTxHash ?? null);
-        setImageTxHash(saved.imageTxHash ?? null);
-        setImageSource(saved.imageSource ?? null);
-        setOnChainBio(saved.onChainBio ?? false);
-        setStatusNote(saved.statusNote ?? null);
-        setStep('reveal');
+      if (raw) {
+        const saved = JSON.parse(raw) as PersistedSoul;
+        if (saved.soul && saved.formulaResult) {
+          setSoul({
+            ...saved.soul,
+            // 大图可能因 quota 未存，刷新时用确定性 SVG 重建，避免重新扣费
+            imageUrl:
+              saved.soul.imageUrl || generateSoulSvgDataUrl(saved.soul.id, saved.soul.archetype),
+          });
+          setFormulaResult(saved.formulaResult);
+          setAnalysis(saved.analysis ?? null);
+          setTimeProfile(saved.timeProfile ?? null);
+          setReadingTxHash(saved.readingTxHash ?? null);
+          setLlmTxHash(saved.llmTxHash ?? null);
+          setImageTxHash(saved.imageTxHash ?? null);
+          setImageSource(saved.imageSource ?? null);
+          setOnChainBio(saved.onChainBio ?? false);
+          setStatusNote(saved.statusNote ?? null);
+          setStep('reveal');
+        }
       }
     } catch {
       // 忽略损坏的缓存
     }
+    setRestoring(false);
   }, [address]);
 
   const persistSoul = (data: PersistedSoul) => {
     if (!address) return;
-    try {
-      localStorage.setItem(`onchain-soul:result:${address.toLowerCase()}`, JSON.stringify(data));
-    } catch {
-      // 忽略写入失败
+    const key = `onchain-soul:result:${address.toLowerCase()}`;
+    const write = (payload: PersistedSoul) => {
+      try {
+        localStorage.setItem(key, JSON.stringify(payload));
+        return true;
+      } catch {
+        return false;
+      }
+    };
+    // 先尝试完整写入；若超 quota（常见于 base64 大图），降级去掉 imageUrl 再写
+    if (!write(data)) {
+      write({ ...data, soul: { ...data.soul, imageUrl: '' } });
     }
   };
 
@@ -438,7 +457,11 @@ export default function DiscoverSoul() {
                 <SiteDisclaimer compact />
               </div>
 
-              {!isConnected ? (
+              {restoring ? (
+                <div className="flex items-center justify-center gap-2 text-sm text-white/50">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Restoring your soul…
+                </div>
+              ) : !isConnected ? (
                 <div className="space-y-4">
                   <ConnectButton variant="hero" className="inline-flex items-center gap-3" />
                   <div className="text-xs text-white/40">Connect a Ritual testnet wallet first (Chain ID 1979)</div>
