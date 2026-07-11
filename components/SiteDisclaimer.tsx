@@ -1,5 +1,5 @@
 const DISCLAIMER =
-  'Testnet demo only. Connecting your wallet will prompt multiple transactions (reading fee, optional RitualWallet deposit, optional LLM call). Your wallet address and transaction statistics are sent to our server and optionally to an AI API. No NFT is minted. Not financial advice.';
+  'Ritual testnet demo. Connecting your wallet triggers on-chain transactions (reading fee, optional RitualWallet deposit, optional LLM call). Your address and transaction stats are processed server-side and may be sent to an AI API. No NFT is minted. Not financial advice.';
 
 const AUTHOR_X_URL = 'https://x.com/Felqeutler';
 
