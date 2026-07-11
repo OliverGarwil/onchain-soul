@@ -104,13 +104,15 @@ export default function OnchainSoulLanding() {
             ].map((step) => (
               <div
                 key={step.num}
-                className="group rounded-3xl border border-white/10 bg-white/[0.015] p-7 transition-all hover:border-white/20 hover:bg-white/[0.025] sm:p-8"
+                className="group flex flex-col rounded-3xl border border-white/10 bg-white/[0.015] p-7 transition-all hover:border-white/20 hover:bg-white/[0.025] sm:p-8"
               >
-                <div className="font-mono text-[56px] tracking-[-4px] text-white/10 transition-colors group-hover:text-white/20 sm:text-[72px]">
+                <div className="font-mono text-[56px] leading-none tracking-[-4px] text-white/10 transition-colors group-hover:text-white/20 sm:text-[72px]">
                   {step.num}
                 </div>
-                <div className="mb-4 mt-2 text-2xl tracking-[-1px] sm:text-3xl">{step.title}</div>
-                <p className="text-sm leading-relaxed text-white/55 sm:text-[15px] sm:leading-relaxed">{step.desc}</p>
+                <div className="mb-4 mt-3 text-2xl tracking-[-1px] sm:text-3xl">{step.title}</div>
+                <p className="flex-1 text-pretty text-sm leading-relaxed text-white/55 sm:text-[15px] sm:leading-relaxed">
+                  {step.desc}
+                </p>
               </div>
             ))}
           </div>
