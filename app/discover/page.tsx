@@ -13,6 +13,7 @@ import { SiteDisclaimer } from '@/components/SiteDisclaimer';
 import { PageShell } from '@/components/PageShell';
 import { ProgressBar } from '@/components/ProgressBar';
 import { StepIndicator } from '@/components/StepIndicator';
+import { ShareCardModal } from '@/components/ShareCardModal';
 import { soulFromAnalysis, type WalletAnalysis } from '@/lib/analyzeWallet';
 import type { SoulResult } from '@/lib/soulFormula';
 import { resolveWalletClient } from '@/lib/ritual/client';
@@ -112,6 +113,7 @@ export default function DiscoverSoul() {
   const [onChainBio, setOnChainBio] = useState(false);
   const [minting, setMinting] = useState(false);
   const [starting, setStarting] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusNote, setStatusNote] = useState<string | null>(null);
 
@@ -270,6 +272,7 @@ export default function DiscoverSoul() {
     setOnChainBio(false);
     setProgress(0);
     setStarting(false);
+    setShareOpen(false);
     setError(null);
     setStatusNote(null);
   };
@@ -429,7 +432,7 @@ export default function DiscoverSoul() {
                     soul={soul}
                     variant="share"
                     hideBiography
-                    onShare={() => alert('Share cards coming soon')}
+                    onShare={() => setShareOpen(true)}
                   />
                 </div>
 
@@ -484,6 +487,8 @@ export default function DiscoverSoul() {
           )}
         </AnimatePresence>
       </div>
+
+      <ShareCardModal soul={soul} open={shareOpen} onClose={() => setShareOpen(false)} />
     </PageShell>
   );
 }
