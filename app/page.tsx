@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowRight, Link2, Shield, Sparkles } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 import { ConnectButton } from '@/components/ConnectButton';
 import { GalleryModal } from '@/components/GalleryModal';
 import { PageShell } from '@/components/PageShell';
@@ -28,13 +28,6 @@ export default function OnchainSoulLanding() {
             <a href="#how" className="hidden text-white/60 transition-colors hover:text-white sm:inline">
               How it works
             </a>
-            <button
-              type="button"
-              onClick={() => setShowGalleryModal(true)}
-              className="hidden text-white/60 transition-colors hover:text-white sm:inline"
-            >
-              Gallery
-            </button>
             <ConnectButton variant="nav" />
           </div>
         </nav>
@@ -46,7 +39,8 @@ export default function OnchainSoulLanding() {
         transition={{ staggerChildren: 0.08 }}
         className="overflow-hidden"
       >
-        <div className="mx-auto max-w-5xl px-5 pb-16 pt-16 text-center sm:px-8 sm:pb-20 sm:pt-24">
+        {/* Hero */}
+        <div className="mx-auto max-w-5xl px-5 pb-20 pt-20 text-center sm:px-8 sm:pb-28 sm:pt-28">
           <motion.div
             {...fadeUp}
             className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1 text-[10px] tracking-[0.5px] sm:text-xs"
@@ -74,10 +68,7 @@ export default function OnchainSoulLanding() {
             Then writes the story only you could live.
           </motion.p>
 
-          <motion.div
-            {...fadeUp}
-            className="flex flex-col items-center justify-center gap-4 sm:flex-row"
-          >
+          <motion.div {...fadeUp} className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             <Link
               href="/discover"
               className="group flex h-14 w-full max-w-xs items-center justify-center gap-3 rounded-2xl bg-white px-9 text-lg font-medium text-black transition-all hover:bg-white/90 active:bg-white sm:w-auto"
@@ -85,39 +76,11 @@ export default function OnchainSoulLanding() {
               Discover your soul
               <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
             </Link>
-            <button
-              type="button"
-              onClick={() => setShowGalleryModal(true)}
-              className="flex h-14 w-full max-w-xs items-center justify-center gap-3 rounded-2xl border border-white/20 text-lg transition-all hover:bg-white/5 sm:w-auto"
-            >
-              See the gallery
-            </button>
-          </motion.div>
-
-          <motion.div
-            {...fadeUp}
-            className="mt-14 flex flex-col items-center justify-center gap-4 text-sm text-white/45 sm:mt-16 sm:flex-row sm:gap-10"
-          >
-            <div className="flex items-center gap-2">
-              <Link2 className="h-4 w-4" /> Chain-native analysis
-            </div>
-            <div className="flex items-center gap-2">
-              <Shield className="h-4 w-4" /> TEE-attested LLM
-            </div>
           </motion.div>
         </div>
 
-        <div className="border-y border-white/10 py-5">
-          <div className="mx-auto flex max-w-5xl flex-wrap justify-center gap-x-8 gap-y-3 px-5 text-[10px] tracking-[1px] text-white/40 sm:gap-x-12 sm:px-8 sm:text-xs">
-            <div>CHAIN ID 1979</div>
-            <div>LLM PRECOMPILE 0x0802</div>
-            <div>IMAGE PRECOMPILE 0x0818</div>
-            <div>TEE ATTESTED</div>
-            <div>EVERY SOUL IS VERIFIABLE</div>
-          </div>
-        </div>
-
-        <div id="how" className="mx-auto max-w-5xl px-5 pb-20 pt-16 sm:px-8 sm:pb-24 sm:pt-20">
+        {/* How it works */}
+        <div id="how" className="mx-auto max-w-5xl px-5 pb-24 pt-4 sm:px-8 sm:pb-32">
           <div className="mb-12 text-center">
             <div className="mb-3 text-xs tracking-[2px] text-white/40">THREE STEPS. ONE SOUL.</div>
             <div className="text-4xl tracking-[-1.2px] sm:text-5xl sm:tracking-[-1.5px]">How your soul is born</div>
@@ -155,7 +118,8 @@ export default function OnchainSoulLanding() {
           </div>
         </div>
 
-        <div className="border-t border-white/10 py-14 text-center sm:py-16">
+        {/* Final CTA */}
+        <div className="border-t border-white/10 py-16 text-center sm:py-24">
           <div className="px-5 text-3xl tracking-[-1.2px] sm:text-5xl sm:tracking-[-1.8px]">
             Ready to meet the version of you
             <br />

@@ -69,13 +69,11 @@ function stepIndex(step: FlowStep): number {
 }
 
 function LoadingStep({
-  stepLabel,
   title,
   progress,
   statusNote,
   active,
 }: {
-  stepLabel: string;
   title: string;
   progress: number;
   statusNote: string | null;
@@ -86,16 +84,17 @@ function LoadingStep({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -12 }}
-      className="w-full max-w-md text-center"
+      className="w-full max-w-sm text-center"
     >
-      <div className="mb-4 text-xs tracking-[3px] text-white/40">{stepLabel}</div>
-      <div className="mb-8 text-3xl leading-tight tracking-[-1px] sm:text-5xl sm:tracking-[-1.5px]">{title}</div>
-      <div className="mb-8 flex justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-white/70" />
+      <div className="mb-6 text-2xl leading-tight tracking-[-0.8px] text-white/80 sm:text-3xl sm:tracking-[-1px]">
+        {title}
       </div>
-      <div className="mb-3 font-mono text-sm text-white/60">{Math.floor(progress)}%</div>
-      <ProgressBar value={progress} active={active} className="mb-4" />
-      {statusNote && <p className="text-xs leading-relaxed text-white/45">{statusNote}</p>}
+      <div className="mb-6 flex justify-center">
+        <Loader2 className="h-7 w-7 animate-spin text-white/50" />
+      </div>
+      <ProgressBar value={progress} active={active} className="mb-3" />
+      <div className="font-mono text-xs text-white/40">{Math.floor(progress)}%</div>
+      {statusNote && <p className="mt-3 text-xs leading-relaxed text-white/35">{statusNote}</p>}
     </motion.div>
   );
 }
@@ -353,7 +352,6 @@ export default function DiscoverSoul() {
               exit={{ opacity: 0, y: -20 }}
               className="w-full max-w-lg text-center"
             >
-              <div className="mb-4 text-xs tracking-[3px] text-white/40">STEP 01 — THE AWAKENING</div>
               <h1 className="mb-6 text-5xl leading-none tracking-[-2px] sm:text-6xl sm:tracking-[-2.2px]">
                 Let the chain
                 <br />
@@ -393,7 +391,6 @@ export default function DiscoverSoul() {
 
           {step === 'opening' && (
             <LoadingStep
-              stepLabel="STEP 02 — OPEN THE RITUAL"
               title="Confirm your reading fee on-chain…"
               progress={progress}
               statusNote={statusNote}
@@ -403,7 +400,6 @@ export default function DiscoverSoul() {
 
           {step === 'analyzing' && (
             <LoadingStep
-              stepLabel="STEP 03 — READING THE LEDGER"
               title="Scanning your on-chain history…"
               progress={progress}
               statusNote={statusNote ?? 'Reading blocks • Decoding calls • Mapping interactions'}
@@ -413,7 +409,6 @@ export default function DiscoverSoul() {
 
           {step === 'generating' && (
             <LoadingStep
-              stepLabel="STEP 04 — INVOKING THE PRECOMPILES"
               title="The TEE is writing your story…"
               progress={progress}
               statusNote={statusNote}
@@ -429,68 +424,67 @@ export default function DiscoverSoul() {
               className="w-full max-w-[1080px]"
             >
               <div className="mb-10 text-center sm:mb-12">
-                <div className="mb-4 inline-block rounded-full bg-white/5 px-4 py-1 text-[10px] tracking-[2px] text-white/50">
-                  RITUAL CHAIN • 1979
-                </div>
                 <div className="mb-3 text-4xl tracking-[-1.5px] sm:text-6xl sm:tracking-[-2px]">This is your soul.</div>
                 <div className="text-lg text-white/60 sm:text-xl">Derived from your on-chain behavior.</div>
 
                 {analysis && (
-                  <div className="mt-5 flex flex-wrap justify-center gap-2 text-[10px] tracking-[1px]">
-                    <span className="rounded-full border border-white/10 px-3 py-1 text-white/50">
-                      DATA: {analysis.source === 'explorer' ? 'EXPLORER API' : 'ON-CHAIN RPC'}
+                  <div className="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] text-white/45">
+                    <span className="font-mono">
+                      {analysis.source === 'explorer' ? 'EXPLORER API' : 'ON-CHAIN RPC'}
                     </span>
-                    <span className="rounded-full border border-white/10 px-3 py-1 text-white/50">
-                      {analysis.txCount} TX • {analysis.days}D
-                    </span>
+                    <span className="text-white/20">·</span>
+                    <span className="font-mono">{analysis.txCount} TX / {analysis.days}D</span>
+                    {onChainBio && (
+                      <>
+                        <span className="text-white/20">·</span>
+                        <span className="text-emerald-300/70">LLM 0x0802 ON-CHAIN</span>
+                      </>
+                    )}
+                    {imageSource === 'onchain' && (
+                      <>
+                        <span className="text-white/20">·</span>
+                        <span className="text-emerald-300/70">IMAGE 0x0818 ON-CHAIN</span>
+                      </>
+                    )}
+                    {imageSource === 'api' && (
+                      <>
+                        <span className="text-white/20">·</span>
+                        <span>PFP VIA API</span>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {analysis && (readingTxHash || llmTxHash || imageTxHash) && (
+                  <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[10px] font-mono text-white/30">
                     {readingTxHash && (
                       <a
                         href={`https://explorer.ritualfoundation.org/tx/${readingTxHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-1 text-white/50 transition-colors hover:text-white"
+                        className="inline-flex items-center gap-1 transition-colors hover:text-white/60"
                       >
-                        READING TX <ExternalLink className="h-3 w-3" />
+                        READING TX <ExternalLink className="h-2.5 w-2.5" />
                       </a>
-                    )}
-                    {onChainBio && (
-                      <span className="rounded-full border border-emerald-400/30 px-3 py-1 text-emerald-200/80">
-                        BIO: LLM 0x0802 ON-CHAIN
-                      </span>
                     )}
                     {llmTxHash && (
                       <a
                         href={`https://explorer.ritualfoundation.org/tx/${llmTxHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-1 text-white/50 transition-colors hover:text-white"
+                        className="inline-flex items-center gap-1 transition-colors hover:text-white/60"
                       >
-                        LLM TX <ExternalLink className="h-3 w-3" />
+                        LLM TX <ExternalLink className="h-2.5 w-2.5" />
                       </a>
-                    )}
-                    {imageSource === 'onchain' && (
-                      <span className="rounded-full border border-emerald-400/30 px-3 py-1 text-emerald-200/80">
-                        PFP: IMAGE 0x0818 ON-CHAIN
-                      </span>
-                    )}
-                    {imageSource === 'api' && (
-                      <span className="rounded-full border border-white/10 px-3 py-1 text-white/50">
-                        PFP: API FALLBACK
-                      </span>
-                    )}
-                    {imageSource === 'svg' && (
-                      <span className="rounded-full border border-white/10 px-3 py-1 text-white/50">
-                        PFP: DETERMINISTIC SVG
-                      </span>
                     )}
                     {imageTxHash && (
                       <a
                         href={`https://explorer.ritualfoundation.org/tx/${imageTxHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-1 text-white/50 transition-colors hover:text-white"
+                        className="inline-flex items-center gap-1 transition-colors hover:text-white/60"
                       >
-                        IMAGE TX <ExternalLink className="h-3 w-3" />
+                        IMAGE TX <ExternalLink className="h-2.5 w-2.5" />
                       </a>
                     )}
                   </div>
