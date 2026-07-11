@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ExternalLink, Loader2, Sparkles } from 'lucide-react';
@@ -122,6 +122,72 @@ export default function DiscoverSoul() {
 
   const showStepIndicator = step !== 'reveal';
   const currentStep = useMemo(() => stepIndex(step), [step]);
+
+  // 持久化 soul 结果，避免刷新后重新走流程、重复扣 reading fee
+  interface PersistedSoul {
+    soul: SoulData;
+    formulaResult: SoulResult;
+    analysis: WalletAnalysis | null;
+    timeProfile: WalletAnalysis['timeProfile'] | null;
+    readingTxHash: Hash | null;
+    llmTxHash: Hash | null;
+    imageTxHash: Hash | null;
+    imageSource: 'onchain' | 'api' | 'svg' | null;
+    onChainBio: boolean;
+    statusNote: string | null;
+  }
+
+  // 挂载/钱包切换后尝试恢复已生成的 soul
+  useEffect(() => {
+    if (!address) return;
+    const key = `onchain-soul:result:${address.toLowerCase()}`;
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return;
+      const saved = JSON.parse(raw) as PersistedSoul;
+      if (saved.soul && saved.formulaResult) {
+        setSoul(saved.soul);
+        setFormulaResult(saved.formulaResult);
+        setAnalysis(saved.analysis ?? null);
+        setTimeProfile(saved.timeProfile ?? null);
+        setReadingTxHash(saved.readingTxHash ?? null);
+        setLlmTxHash(saved.llmTxHash ?? null);
+        setImageTxHash(saved.imageTxHash ?? null);
+        setImageSource(saved.imageSource ?? null);
+        setOnChainBio(saved.onChainBio ?? false);
+        setStatusNote(saved.statusNote ?? null);
+        setStep('reveal');
+      }
+    } catch {
+      // 忽略损坏的缓存
+    }
+  }, [address]);
+
+  const persistSoul = (data: PersistedSoul) => {
+    if (!address) return;
+    try {
+      localStorage.setItem(`onchain-soul:result:${address.toLowerCase()}`, JSON.stringify(data));
+    } catch {
+      // 忽略写入失败
+    }
+  };
+
+  // reveal 状态稳定后自动持久化（含 mint 后 txHash 更新）
+  useEffect(() => {
+    if (step !== 'reveal' || !soul || !formulaResult || !address) return;
+    persistSoul({
+      soul,
+      formulaResult,
+      analysis,
+      timeProfile,
+      readingTxHash,
+      llmTxHash,
+      imageTxHash,
+      imageSource,
+      onChainBio,
+      statusNote,
+    });
+  }, [step, soul, formulaResult, analysis, timeProfile, readingTxHash, llmTxHash, imageTxHash, imageSource, onChainBio, statusNote, address]);
 
   const runAnalysis = async () => {
     if (!address) return;
@@ -306,6 +372,13 @@ export default function DiscoverSoul() {
   };
 
   const reset = () => {
+    if (address) {
+      try {
+        localStorage.removeItem(`onchain-soul:result:${address.toLowerCase()}`);
+      } catch {
+        // 忽略
+      }
+    }
     setStep('idle');
     setSoul(null);
     setFormulaResult(null);
