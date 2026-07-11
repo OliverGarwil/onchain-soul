@@ -11,8 +11,11 @@ export const SYSTEM_CONTRACTS = {
 
 /** LLM capability = 1 */
 export const CAPABILITY_LLM = 1;
+/** Image capability = 2 */
+export const CAPABILITY_IMAGE = 2;
 
 export const LLM_MODEL = 'zai-org/GLM-4.7-FP8';
+export const IMAGE_MODEL = process.env.RITUAL_IMAGE_MODEL?.trim() || 'black-forest-labs/FLUX.1-schnell';
 
 export const RITUAL_WALLET_ABI = [
   {

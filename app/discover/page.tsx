@@ -19,6 +19,8 @@ import type { SoulResult } from '@/lib/soulFormula';
 import { resolveWalletClient } from '@/lib/ritual/client';
 import { paySoulReadingFee } from '@/lib/ritual/readingFee';
 import { generateBiographyOnChain } from '@/lib/ritual/llm';
+import { generateImageOnChain } from '@/lib/ritual/image';
+import { generateSoulSvgDataUrl } from '@/lib/soulImage';
 import { anchorSoulOnChain } from '@/lib/ritual/anchor';
 import { ritualChain } from '@/lib/ritual';
 import type { Hash } from 'viem';
@@ -110,6 +112,8 @@ export default function DiscoverSoul() {
   const [timeProfile, setTimeProfile] = useState<WalletAnalysis['timeProfile'] | null>(null);
   const [readingTxHash, setReadingTxHash] = useState<Hash | null>(null);
   const [llmTxHash, setLlmTxHash] = useState<Hash | null>(null);
+  const [imageTxHash, setImageTxHash] = useState<Hash | null>(null);
+  const [imageSource, setImageSource] = useState<'onchain' | 'api' | 'svg' | null>(null);
   const [onChainBio, setOnChainBio] = useState(false);
   const [minting, setMinting] = useState(false);
   const [starting, setStarting] = useState(false);
@@ -133,6 +137,8 @@ export default function DiscoverSoul() {
     setStatusNote(null);
     setReadingTxHash(null);
     setLlmTxHash(null);
+    setImageTxHash(null);
+    setImageSource(null);
     setOnChainBio(false);
     setStep('opening');
     setProgress(10);
@@ -211,6 +217,45 @@ export default function DiscoverSoul() {
         }
       }
 
+      // --- 图像生成：三层 fallback（链上 Image 预编译 → API → 确定性 SVG） ---
+      setProgress(70);
+      setStatusNote('Invoking Ritual Image precompile (0x0818)…');
+
+      let imageUrl = generateSoulSvgDataUrl(walletAnalysis.address, result.archetype as SoulArchetype);
+      setImageSource('svg');
+
+      try {
+        const img = await generateImageOnChain(
+          walletClient,
+          address,
+          result.archetype as SoulArchetype,
+          result.dimensions
+        );
+        imageUrl = img.imageUrl;
+        setImageTxHash(img.txHash);
+        setImageSource('onchain');
+        setStatusNote('On-chain AI image generated via 0x0818');
+      } catch (imgErr) {
+        console.warn('Image precompile failed, trying API fallback:', imgErr);
+        try {
+          const res = await fetch('/api/image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ archetype: result.archetype, dimensions: result.dimensions }),
+          });
+          if (res.ok) {
+            const data = (await res.json()) as { imageUrl?: string };
+            if (data.imageUrl) {
+              imageUrl = data.imageUrl;
+              setImageSource('api');
+              setStatusNote('Image generated via API fallback');
+            }
+          }
+        } catch {
+          // 保持 SVG fallback
+        }
+      }
+
       setProgress(100);
       const soulData: SoulData = {
         id: walletAnalysis.address,
@@ -219,7 +264,7 @@ export default function DiscoverSoul() {
         traits: MOCK_TRAITS[result.archetype as SoulArchetype],
         mintedAt: new Date().toISOString().split('T')[0],
         txHash: txHash.startsWith('0x') ? txHash : (`0x${txHash}` as Hash),
-        imageUrl: `https://picsum.photos/seed/${walletAnalysis.address.slice(2, 10)}/800/600`,
+        imageUrl,
       };
 
       setSoul(soulData);
@@ -269,6 +314,8 @@ export default function DiscoverSoul() {
     setTimeProfile(null);
     setReadingTxHash(null);
     setLlmTxHash(null);
+    setImageTxHash(null);
+    setImageSource(null);
     setOnChainBio(false);
     setProgress(0);
     setStarting(false);
@@ -419,6 +466,31 @@ export default function DiscoverSoul() {
                         className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-1 text-white/50 transition-colors hover:text-white"
                       >
                         LLM TX <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                    {imageSource === 'onchain' && (
+                      <span className="rounded-full border border-emerald-400/30 px-3 py-1 text-emerald-200/80">
+                        PFP: IMAGE 0x0818 ON-CHAIN
+                      </span>
+                    )}
+                    {imageSource === 'api' && (
+                      <span className="rounded-full border border-white/10 px-3 py-1 text-white/50">
+                        PFP: API FALLBACK
+                      </span>
+                    )}
+                    {imageSource === 'svg' && (
+                      <span className="rounded-full border border-white/10 px-3 py-1 text-white/50">
+                        PFP: DETERMINISTIC SVG
+                      </span>
+                    )}
+                    {imageTxHash && (
+                      <a
+                        href={`https://explorer.ritualfoundation.org/tx/${imageTxHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 rounded-full border border-white/10 px-3 py-1 text-white/50 transition-colors hover:text-white"
+                      >
+                        IMAGE TX <ExternalLink className="h-3 w-3" />
                       </a>
                     )}
                   </div>
