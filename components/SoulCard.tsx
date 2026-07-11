@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Calendar, Hash, Zap } from 'lucide-react';
+import { Calendar, Hash, Share2 } from 'lucide-react';
 
 export type SoulArchetype =
   | 'The Silent Architect'
@@ -122,9 +122,9 @@ export function SoulCard({ soul, variant = 'default', hideBiography = false, onS
         <button
           type="button"
           onClick={onShare}
-          className="absolute right-6 top-7 flex items-center gap-2 rounded-full border border-white/20 bg-black/60 px-4 py-2 text-xs tracking-[0.5px] backdrop-blur transition-all hover:bg-white hover:text-black active:scale-[0.985] sm:right-8 sm:top-8"
+          className="flex w-full items-center justify-center gap-2 border-t border-white/10 px-6 py-4 text-xs tracking-[1px] text-white/65 transition-colors hover:bg-white/[0.04] hover:text-white sm:px-8"
         >
-          <Zap className="h-3.5 w-3.5" /> SHARE
+          <Share2 className="h-4 w-4" /> SHARE YOUR SOUL
         </button>
       )}
     </div>
