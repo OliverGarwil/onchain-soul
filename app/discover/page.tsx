@@ -340,7 +340,7 @@ export default function DiscoverSoul() {
       }
       className="flex flex-col"
     >
-      <div className="flex flex-1 flex-col items-center justify-center px-5 py-10 pb-28 sm:px-6 sm:py-12 sm:pb-24">
+      <div className="flex flex-1 flex-col items-center justify-center px-5 py-10 pb-20 sm:px-6 sm:py-12 sm:pb-16">
         {showStepIndicator && <StepIndicator current={currentStep} />}
 
         <AnimatePresence mode="wait">
@@ -531,7 +531,7 @@ export default function DiscoverSoul() {
                 </div>
               </div>
 
-              <div className="mt-12 flex flex-col items-center justify-center gap-4 sm:mt-16 sm:flex-row">
+              <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:mt-12 sm:flex-row">
                 <button
                   type="button"
                   onClick={reset}

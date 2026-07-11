@@ -117,7 +117,7 @@ export default function OnchainSoulLanding() {
         </div>
 
         {/* Final CTA */}
-        <div className="border-t border-white/10 py-16 text-center sm:py-24">
+        <div className="border-t border-white/10 py-12 text-center sm:py-16">
           <div className="px-5 text-3xl tracking-[-1.2px] sm:text-5xl sm:tracking-[-1.8px]">
             Ready to meet the version of you
             <br />
