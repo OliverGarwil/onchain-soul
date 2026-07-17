@@ -9,7 +9,7 @@ const ARCHETYPE_COLORS: Record<SoulArchetype, { primary: string; secondary: stri
   'The Sovereign Agent': { primary: '#ec4899', secondary: '#831843' },
 };
 
-/** 将 hex 地址转为确定性种子 */
+/** Convert a hex address into a deterministic seed */
 function seedFromAddress(address: string): number[] {
   const clean = address.replace(/^0x/i, '');
   const bytes: number[] = [];
@@ -19,7 +19,7 @@ function seedFromAddress(address: string): number[] {
   return bytes;
 }
 
-/** 简单确定性 PRNG */
+/** Simple deterministic PRNG */
 function mulberry32(seed: number): () => number {
   return () => {
     seed |= 0;
@@ -31,8 +31,8 @@ function mulberry32(seed: number): () => number {
 }
 
 /**
- * 生成确定性 SVG 灵魂图（无需外部依赖，每个钱包唯一）
- * 返回 base64 data URL，可直接用作 <img src>
+ * Generate a deterministic SVG soul image (no external deps, unique per wallet)
+ * Returns a base64 data URL usable directly as <img src>
  */
 export function generateSoulSvgDataUrl(address: string, archetype: SoulArchetype): string {
   const colors = ARCHETYPE_COLORS[archetype] ?? { primary: '#14b8a6', secondary: '#05241F' };
@@ -44,7 +44,7 @@ export function generateSoulSvgDataUrl(address: string, archetype: SoulArchetype
   const cx = size / 2;
   const cy = size / 2;
 
-  // 背景渐变
+  // Background gradient
   const bgGradient = `
     <defs>
       <radialGradient id="bg" cx="50%" cy="40%" r="70%">
@@ -58,7 +58,7 @@ export function generateSoulSvgDataUrl(address: string, archetype: SoulArchetype
     </defs>
   `;
 
-  // 生成同心几何环
+  // Concentric geometric rings
   const rings: string[] = [];
   const ringCount = 4 + Math.floor(rand() * 3);
   for (let i = 0; i < ringCount; i++) {
@@ -70,7 +70,7 @@ export function generateSoulSvgDataUrl(address: string, archetype: SoulArchetype
     );
   }
 
-  // 生成散布的节点
+  // Scattered nodes
   const nodes: string[] = [];
   const nodeCount = 8 + Math.floor(rand() * 8);
   for (let i = 0; i < nodeCount; i++) {
@@ -85,7 +85,7 @@ export function generateSoulSvgDataUrl(address: string, archetype: SoulArchetype
     );
   }
 
-  // 中心标记
+  // Center marker
   const centerShape =
     rand() > 0.5
       ? `<polygon points="${cx},${cy - 30} ${cx + 26},${cy + 15} ${cx - 26},${cy + 15}" fill="${colors.primary}" fill-opacity="0.7"/>`
@@ -101,7 +101,7 @@ export function generateSoulSvgDataUrl(address: string, archetype: SoulArchetype
     <text x="${cx}" y="${size - 40}" text-anchor="middle" font-family="monospace" font-size="14" fill="${colors.primary}" fill-opacity="0.6" letter-spacing="3">ONCHAIN SOUL</text>
   </svg>`;
 
-  // 转为 base64 data URL
+  // Convert to base64 data URL
   const base64 = typeof window === 'undefined'
     ? Buffer.from(svg).toString('base64')
     : btoa(unescape(encodeURIComponent(svg)));

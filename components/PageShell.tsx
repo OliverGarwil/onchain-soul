@@ -8,7 +8,7 @@ interface PageShellProps {
   className?: string;
 }
 
-/** 页面外壳：统一深绿背景与网格纹理 */
+/** Page shell: shared dark-green background with grid texture */
 export function PageShell({ children, header, className = '' }: PageShellProps) {
   return (
     <div className={`relative min-h-screen bg-[#0B2E26] text-[#F4F4EF] overflow-x-hidden ${className}`}>

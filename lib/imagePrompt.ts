@@ -1,6 +1,6 @@
 import type { SoulArchetype, DimensionScores } from '@/lib/soulFormula';
 
-/** 每个 archetype 的视觉风格描述 */
+/** Visual style description per archetype */
 const ARCHETYPE_VISUALS: Record<SoulArchetype, string> = {
   'The Silent Architect':
     'minimalist geometric architecture, precise clean lines, deep blue and slate tones, floating crystalline structures, mathematical harmony, dark background',
@@ -16,7 +16,7 @@ const ARCHETYPE_VISUALS: Record<SoulArchetype, string> = {
     'autonomous machine entity, pink and magenta neon circuitry, precise robotic precision, distributed network nodes, futuristic AI consciousness, dark background',
 };
 
-/** 构建 Image 预编译的生图 prompt */
+/** Build the image-generation prompt for the Image precompile */
 export function buildImagePrompt(archetype: SoulArchetype, dimensions: DimensionScores): string {
   const visual = ARCHETYPE_VISUALS[archetype];
   const intensity = Math.round((dimensions.frequency + dimensions.gasIntensity + dimensions.risk) / 3);

@@ -24,7 +24,7 @@ type RitualReceipt = {
   spcCalls?: { output?: `0x${string}` }[];
 };
 
-/** 编码 Image 预编译请求（异步预编译格式，与 LLM 0x0802 同构） */
+/** Encode the Image precompile request (async precompile format, same shape as LLM 0x0802) */
 function encodeImageRequest(executor: `0x${string}`, prompt: string): `0x${string}` {
   const messages = JSON.stringify([{ role: 'user', content: prompt }]);
 
@@ -67,7 +67,7 @@ function encodeImageRequest(executor: `0x${string}`, prompt: string): `0x${strin
   );
 }
 
-/** 解码 Image 预编译输出，返回 base64 data URL */
+/** Decode the Image precompile output into a base64 data URL */
 function decodeImageOutput(output: `0x${string}`): string {
   const [hasError, imageData, , errorMessage] = decodeAbiParameters(
     parseAbiParameters('bool, bytes, bytes, string, (string,string,string)'),
@@ -79,7 +79,7 @@ function decodeImageOutput(output: `0x${string}`): string {
   }
 
   const bytes = hexToBytes(imageData);
-  // 尝试检测是否为 JSON 包装（某些预编译返回 URL 或 base64 字符串）
+  // Detect JSON wrapping (some precompiles return a URL or base64 string)
   try {
     const raw = new TextDecoder().decode(bytes);
     const json = JSON.parse(raw) as {
@@ -100,12 +100,12 @@ function decodeImageOutput(output: `0x${string}`): string {
     if (json.b64_json) return `data:image/png;base64,${json.b64_json}`;
     if (json.url) return json.url;
   } catch {
-    // 非 JSON — 检查是否为直接 base64 或二进制图片
+    // Not JSON — check for raw base64 or binary image data
   }
 
-  // 二进制图片数据 → base64 data URL
+  // Binary image data to base64 data URL
   if (bytes.length > 0) {
-    // PNG 魔数 0x89504E47 或 JPEG 魔数 0xFFD8
+    // PNG magic 0x89504E47 or JPEG magic 0xFFD8
     const isPng = bytes[0] === 0x89 && bytes[1] === 0x50;
     const isJpeg = bytes[0] === 0xff && bytes[1] === 0xd8;
     if (isPng || isJpeg) {
@@ -114,7 +114,7 @@ function decodeImageOutput(output: `0x${string}`): string {
       return `data:${mime};base64,${base64}`;
     }
 
-    // 可能是 base64 字符串
+    // Possibly a base64 string
     const raw = new TextDecoder().decode(bytes).trim();
     if (raw.startsWith('http')) return raw;
     if (/^[A-Za-z0-9+/=]+$/.test(raw) && raw.length > 100) {
@@ -125,7 +125,7 @@ function decodeImageOutput(output: `0x${string}`): string {
   throw new Error('Unrecognized image precompile output format');
 }
 
-/** 通过 Ritual Image 预编译 (0x0818) 生成灵魂 PFP */
+/** Generate the soul PFP via the Ritual Image precompile (0x0818) */
 export async function generateImageOnChain(
   walletClient: WalletClient,
   userAddress: `0x${string}`,

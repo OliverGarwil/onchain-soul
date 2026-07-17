@@ -6,7 +6,7 @@ interface ProgressBarProps {
   className?: string;
 }
 
-/** 统一进度条样式 */
+/** Shared progress bar style */
 export function ProgressBar({ value, active = false, className = '' }: ProgressBarProps) {
   const clamped = Math.max(0, Math.min(100, value));
 

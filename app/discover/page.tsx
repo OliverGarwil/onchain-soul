@@ -51,6 +51,31 @@ const MOCK_TRAITS: Record<SoulArchetype, string[]> = {
 
 type FlowStep = 'idle' | 'opening' | 'analyzing' | 'generating' | 'reveal';
 
+type BioMode = 'template' | 'api' | 'onchain';
+
+const BIO_MODE_STORAGE_KEY = 'onchain-soul:bio-mode';
+
+const BIO_MODES: { id: BioMode; label: string; desc: string; txNote: string }[] = [
+  {
+    id: 'template',
+    label: 'Template',
+    desc: 'Instant biography from your archetype. No AI call, no extra data sent.',
+    txNote: '1 wallet signature',
+  },
+  {
+    id: 'api',
+    label: 'AI (server)',
+    desc: 'Biography written by our AI API. Nothing extra happens on-chain.',
+    txNote: '1 wallet signature',
+  },
+  {
+    id: 'onchain',
+    label: 'On-chain LLM',
+    desc: 'Ritual LLM + Image precompiles in a TEE. May need a RitualWallet deposit.',
+    txNote: 'Up to 4 wallet signatures + gas',
+  },
+];
+
 function stepIndex(step: FlowStep): number {
   switch (step) {
     case 'idle':
@@ -116,6 +141,7 @@ export default function DiscoverSoul() {
   const [onChainBio, setOnChainBio] = useState(false);
   const [minting, setMinting] = useState(false);
   const [starting, setStarting] = useState(false);
+  const [bioMode, setBioMode] = useState<BioMode>('api');
   const [shareOpen, setShareOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusNote, setStatusNote] = useState<string | null>(null);
@@ -129,7 +155,7 @@ export default function DiscoverSoul() {
   const showStepIndicator = step !== 'reveal';
   const currentStep = useMemo(() => stepIndex(step), [step]);
 
-  // 持久化 soul 结果，避免刷新后重新走流程、重复扣 reading fee
+  // Persist the soul result so a refresh does not rerun the flow or re-charge the reading fee
   interface PersistedSoul {
     soul: SoulData;
     formulaResult: SoulResult;
@@ -143,7 +169,7 @@ export default function DiscoverSoul() {
     statusNote: string | null;
   }
 
-  // 挂载/钱包切换后尝试恢复已生成的 soul
+  // Try to restore a previously generated soul on mount / wallet switch
   useEffect(() => {
     if (!address) {
       setRestoring(false);
@@ -157,7 +183,7 @@ export default function DiscoverSoul() {
         if (saved.soul && saved.formulaResult) {
           setSoul({
             ...saved.soul,
-            // 大图可能因 quota 未存，刷新时用确定性 SVG 重建，避免重新扣费
+            // Large images may be dropped due to storage quota; rebuild a deterministic SVG on refresh to avoid re-charging
             imageUrl:
               saved.soul.imageUrl || generateSoulSvgDataUrl(saved.soul.id, saved.soul.archetype),
           });
@@ -174,10 +200,31 @@ export default function DiscoverSoul() {
         }
       }
     } catch {
-      // 忽略损坏的缓存
+      // ignore corrupted cache
     }
     setRestoring(false);
   }, [address]);
+
+  // Remember the user's biography mode across visits
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(BIO_MODE_STORAGE_KEY);
+      if (saved === 'template' || saved === 'api' || saved === 'onchain') {
+        setBioMode(saved);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const selectBioMode = (mode: BioMode) => {
+    setBioMode(mode);
+    try {
+      localStorage.setItem(BIO_MODE_STORAGE_KEY, mode);
+    } catch {
+      // ignore
+    }
+  };
 
   const persistSoul = (data: PersistedSoul) => {
     if (!address) return;
@@ -190,13 +237,13 @@ export default function DiscoverSoul() {
         return false;
       }
     };
-    // 先尝试完整写入；若超 quota（常见于 base64 大图），降级去掉 imageUrl 再写
+    // Try a full write first; on quota errors (common with large base64 images) retry without imageUrl
     if (!write(data)) {
       write({ ...data, soul: { ...data.soul, imageUrl: '' } });
     }
   };
 
-  // reveal 状态稳定后自动持久化（含 mint 后 txHash 更新）
+  // Auto-persist once reveal state settles (including txHash updates after mint)
   useEffect(() => {
     if (step !== 'reveal' || !soul || !formulaResult || !address) return;
     persistSoul({
@@ -273,75 +320,102 @@ export default function DiscoverSoul() {
       let txHash = readingHash;
 
       setProgress(40);
-      setStatusNote('Invoking Ritual LLM precompile (0x0802)…');
 
-      try {
-        const llm = await generateBiographyOnChain(walletClient, address, walletAnalysis, result);
-        biography = llm.biography;
-        txHash = llm.txHash;
-        setLlmTxHash(llm.txHash);
-        setOnChainBio(true);
-        setStatusNote('On-chain LLM biography generated');
-      } catch (llmErr) {
-        console.warn('LLM precompile failed, trying API fallback:', llmErr);
+      const fetchApiBiography = async (): Promise<string | null> => {
         try {
           const res = await fetch('/api/biography', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ analysis: walletAnalysis, result }),
           });
-          if (res.ok) {
-            const data = (await res.json()) as { biography?: string };
-            if (data.biography) {
-              biography = data.biography;
-              setStatusNote('Biography generated via API fallback');
-            } else {
-              setStatusNote('LLM unavailable — using template biography from on-chain analysis');
-            }
+          if (!res.ok) return null;
+          const data = (await res.json()) as { biography?: string };
+          return data.biography ?? null;
+        } catch {
+          return null;
+        }
+      };
+
+      if (bioMode === 'template') {
+        setStatusNote('Template biography — no AI call, no extra signatures');
+      } else if (bioMode === 'api') {
+        setStatusNote('Writing your biography via AI API…');
+        const apiBio = await fetchApiBiography();
+        if (apiBio) {
+          biography = apiBio;
+          setStatusNote('Biography generated via AI API');
+        } else {
+          setStatusNote('AI API unavailable — using template biography');
+        }
+      } else {
+        setStatusNote('Invoking Ritual LLM precompile (0x0802)…');
+        try {
+          const llm = await generateBiographyOnChain(walletClient, address, walletAnalysis, result);
+          biography = llm.biography;
+          txHash = llm.txHash;
+          setLlmTxHash(llm.txHash);
+          setOnChainBio(true);
+          setStatusNote('On-chain LLM biography generated');
+        } catch (llmErr) {
+          console.warn('LLM precompile failed, trying API fallback:', llmErr);
+          const apiBio = await fetchApiBiography();
+          if (apiBio) {
+            biography = apiBio;
+            setStatusNote('On-chain LLM failed — biography generated via API fallback');
           } else {
             setStatusNote('LLM unavailable — using template biography from on-chain analysis');
           }
-        } catch {
-          setStatusNote('LLM unavailable — using template biography from on-chain analysis');
         }
       }
 
-      // --- 图像生成：三层 fallback（链上 Image 预编译 → API → 确定性 SVG） ---
+      // Image: deterministic SVG base; API upgrade for AI modes; precompile only in on-chain mode
       setProgress(70);
-      setStatusNote('Invoking Ritual Image precompile (0x0818)…');
 
       let imageUrl = generateSoulSvgDataUrl(walletAnalysis.address, result.archetype as SoulArchetype);
       setImageSource('svg');
 
-      try {
-        const img = await generateImageOnChain(
-          walletClient,
-          address,
-          result.archetype as SoulArchetype,
-          result.dimensions
-        );
-        imageUrl = img.imageUrl;
-        setImageTxHash(img.txHash);
-        setImageSource('onchain');
-        setStatusNote('On-chain AI image generated via 0x0818');
-      } catch (imgErr) {
-        console.warn('Image precompile failed, trying API fallback:', imgErr);
+      const fetchApiImage = async (): Promise<string | null> => {
         try {
           const res = await fetch('/api/image', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ archetype: result.archetype, dimensions: result.dimensions }),
           });
-          if (res.ok) {
-            const data = (await res.json()) as { imageUrl?: string };
-            if (data.imageUrl) {
-              imageUrl = data.imageUrl;
-              setImageSource('api');
-              setStatusNote('Image generated via API fallback');
-            }
-          }
+          if (!res.ok) return null;
+          const data = (await res.json()) as { imageUrl?: string };
+          return data.imageUrl ?? null;
         } catch {
-          // 保持 SVG fallback
+          return null;
+        }
+      };
+
+      if (bioMode === 'api') {
+        const apiImage = await fetchApiImage();
+        if (apiImage) {
+          imageUrl = apiImage;
+          setImageSource('api');
+        }
+      } else if (bioMode === 'onchain') {
+        setStatusNote('Invoking Ritual Image precompile (0x0818)…');
+        try {
+          const img = await generateImageOnChain(
+            walletClient,
+            address,
+            result.archetype as SoulArchetype,
+            result.dimensions
+          );
+          imageUrl = img.imageUrl;
+          setImageTxHash(img.txHash);
+          setImageSource('onchain');
+          setStatusNote('On-chain AI image generated via 0x0818');
+        } catch (imgErr) {
+          console.warn('Image precompile failed, trying API fallback:', imgErr);
+          const apiImage = await fetchApiImage();
+          if (apiImage) {
+            imageUrl = apiImage;
+            setImageSource('api');
+            setStatusNote('Image generated via API fallback');
+          }
         }
       }
 
@@ -422,7 +496,7 @@ export default function DiscoverSoul() {
       try {
         localStorage.removeItem(`onchain-soul:result:${address.toLowerCase()}`);
       } catch {
-        // 忽略
+        // ignore
       }
     }
     setStep('idle');
@@ -495,14 +569,39 @@ export default function DiscoverSoul() {
                   <div className="text-xs text-white/40">Connect a Ritual testnet wallet first (Chain ID 1979)</div>
                 </div>
               ) : (
-                <button
-                  type="button"
-                  onClick={runAnalysis}
-                  disabled={starting}
-                  className="inline-flex h-14 items-center gap-3 rounded-2xl bg-white px-12 text-lg font-medium text-black transition-all active:bg-white/90 disabled:opacity-60"
-                >
-                  {starting ? 'Opening wallet…' : 'Begin soul reading'} <Sparkles className="h-5 w-5" />
-                </button>
+                <div className="space-y-6">
+                  <div>
+                    <div className="mb-3 text-[10px] tracking-[2px] text-white/40">BIOGRAPHY MODE</div>
+                    <div className="grid gap-3 text-left sm:grid-cols-3">
+                      {BIO_MODES.map((mode) => (
+                        <button
+                          key={mode.id}
+                          type="button"
+                          onClick={() => selectBioMode(mode.id)}
+                          disabled={starting}
+                          className={`rounded-2xl border px-4 py-3 transition-all disabled:opacity-60 ${
+                            bioMode === mode.id
+                              ? 'border-white/60 bg-white/10'
+                              : 'border-white/10 bg-white/[0.02] hover:border-white/25'
+                          }`}
+                        >
+                          <div className="mb-1 text-sm font-medium">{mode.label}</div>
+                          <div className="mb-2 text-[11px] leading-snug text-white/50">{mode.desc}</div>
+                          <div className="text-[10px] tracking-[0.5px] text-amber-200/70">{mode.txNote}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={runAnalysis}
+                    disabled={starting}
+                    className="inline-flex h-14 items-center gap-3 rounded-2xl bg-white px-12 text-lg font-medium text-black transition-all active:bg-white/90 disabled:opacity-60"
+                  >
+                    {starting ? 'Opening wallet…' : 'Begin soul reading'} <Sparkles className="h-5 w-5" />
+                  </button>
+                </div>
               )}
 
               {isConnected && chainId !== ritualChain.id && (
@@ -533,7 +632,7 @@ export default function DiscoverSoul() {
 
           {step === 'generating' && (
             <LoadingStep
-              title="The TEE is writing your story…"
+              title={bioMode === 'onchain' ? 'The TEE is writing your story…' : 'Writing your story…'}
               progress={progress}
               statusNote={statusNote}
               active

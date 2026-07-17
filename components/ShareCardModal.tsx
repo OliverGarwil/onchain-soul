@@ -23,7 +23,7 @@ const archetypeColors: Record<string, string> = {
 const WIDTH = 1200;
 const HEIGHT = 675;
 
-/** 在 canvas 上绘制分享卡 */
+/** Draw the share card on a canvas */
 function drawShareCard(canvas: HTMLCanvasElement, soul: SoulData) {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
@@ -35,18 +35,18 @@ function drawShareCard(canvas: HTMLCanvasElement, soul: SoulData) {
   const muted = 'rgba(244,244,239,0.55)';
   const faint = 'rgba(244,244,239,0.3)';
 
-  // 背景
+  // Background
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-  // 顶部光晕
+  // Top glow
   const glow = ctx.createRadialGradient(WIDTH / 2, -100, 50, WIDTH / 2, -100, 600);
   glow.addColorStop(0, 'rgba(244,244,239,0.08)');
   glow.addColorStop(1, 'rgba(244,244,239,0)');
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-  // 网格纹理
+  // Grid texture
   ctx.strokeStyle = 'rgba(244,244,239,0.04)';
   ctx.lineWidth = 1;
   for (let x = 0; x < WIDTH; x += 80) {
@@ -62,18 +62,18 @@ function drawShareCard(canvas: HTMLCanvasElement, soul: SoulData) {
     ctx.stroke();
   }
 
-  // 顶部 accent 条
+  // Top accent bar
   ctx.fillStyle = accent;
   ctx.fillRect(0, 0, WIDTH, 4);
 
-  // 底部 accent 光晕
+  // Bottom accent glow
   const bottomGlow = ctx.createRadialGradient(WIDTH / 2, HEIGHT + 50, 10, WIDTH / 2, HEIGHT + 50, 400);
   bottomGlow.addColorStop(0, accent + '40');
   bottomGlow.addColorStop(1, accent + '00');
   ctx.fillStyle = bottomGlow;
   ctx.fillRect(0, HEIGHT - 200, WIDTH, 200);
 
-  // 顶部品牌
+  // Brand header
   ctx.font = '600 22px ui-sans-serif, system-ui, sans-serif';
   ctx.fillStyle = fg;
   ctx.fillText('Onchain Soul', 64, 70);
@@ -84,7 +84,7 @@ function drawShareCard(canvas: HTMLCanvasElement, soul: SoulData) {
   ctx.fillText('RITUAL CHAIN • 1979', WIDTH - 64, 70);
   ctx.textAlign = 'left';
 
-  // 灵魂 ID
+  // Soul ID
   ctx.font = '500 12px ui-monospace, monospace';
   ctx.fillStyle = faint;
   ctx.fillText('SOUL ID', 64, 130);
@@ -92,12 +92,12 @@ function drawShareCard(canvas: HTMLCanvasElement, soul: SoulData) {
   ctx.font = '500 16px ui-monospace, monospace';
   ctx.fillText(`#${soul.id.slice(2, 10)}`, 64, 152);
 
-  // Archetype 名
+  // Archetype name
   ctx.font = '700 56px ui-sans-serif, system-ui, sans-serif';
   ctx.fillStyle = fg;
   ctx.fillText(soul.archetype, 64, 230);
 
-  // 传记文本（自动换行）
+  // Biography text (word-wrapped)
   ctx.font = '400 19px ui-sans-serif, system-ui, sans-serif';
   ctx.fillStyle = 'rgba(244,244,239,0.8)';
   const maxWidth = WIDTH - 128;
@@ -133,7 +133,7 @@ function drawShareCard(canvas: HTMLCanvasElement, soul: SoulData) {
   const traitY = 280 + maxLines * 30 + 30;
   for (const trait of soul.traits) {
     const w = ctx.measureText(trait).width + 32;
-    // 胶囊背景
+    // Pill background
     ctx.fillStyle = 'rgba(244,244,239,0.06)';
     ctx.beginPath();
     ctx.roundRect(traitX, traitY - 18, w, 30, 15);
@@ -141,13 +141,13 @@ function drawShareCard(canvas: HTMLCanvasElement, soul: SoulData) {
     ctx.strokeStyle = 'rgba(244,244,239,0.12)';
     ctx.lineWidth = 1;
     ctx.stroke();
-    // 文字
+    // Label text
     ctx.fillStyle = 'rgba(244,244,239,0.75)';
     ctx.fillText(trait, traitX + 16, traitY + 1);
     traitX += w + 10;
   }
 
-  // 底部信息
+  // Footer info
   ctx.font = '500 13px ui-monospace, monospace';
   ctx.fillStyle = faint;
   ctx.fillText(soul.mintedAt, 64, HEIGHT - 56);
@@ -179,7 +179,7 @@ export function ShareCardModal({ soul, open, onClose }: ShareCardModalProps) {
     if (!open || !soul) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
-    // 高分辨率
+    // High resolution
     const dpr = window.devicePixelRatio || 1;
     canvas.width = WIDTH * dpr;
     canvas.height = HEIGHT * dpr;
@@ -215,7 +215,7 @@ export function ShareCardModal({ soul, open, onClose }: ShareCardModalProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // 剪贴板 API 部分浏览器不支持图片
+      // Some browsers do not support images in the clipboard API
     }
   };
 
@@ -251,7 +251,7 @@ export function ShareCardModal({ soul, open, onClose }: ShareCardModalProps) {
               Share your soul
             </div>
 
-            {/* 卡片预览 */}
+            {/* Card preview */}
             <div className="overflow-hidden rounded-2xl border border-white/10">
               <canvas
                 ref={canvasRef}
@@ -260,7 +260,7 @@ export function ShareCardModal({ soul, open, onClose }: ShareCardModalProps) {
               />
             </div>
 
-            {/* 操作按钮 */}
+            {/* Action buttons */}
             <div className="mt-5 grid grid-cols-3 gap-2">
               <button
                 type="button"

@@ -3,11 +3,11 @@
 const STEPS = ['Awaken', 'Open', 'Read', 'Reveal'] as const;
 
 interface StepIndicatorProps {
-  /** 0–3 对应四步流程 */
+  /** 0-3 maps to the four flow steps */
   current: number;
 }
 
-/** Discover 流程步骤指示器 */
+/** Step indicator for the discover flow */
 export function StepIndicator({ current }: StepIndicatorProps) {
   return (
     <div className="mb-10 flex items-center justify-center gap-2 sm:gap-3">

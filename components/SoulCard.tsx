@@ -24,7 +24,7 @@ export interface SoulData {
 interface SoulCardProps {
   soul: SoulData;
   variant?: 'default' | 'share';
-  /** Reveal 页右侧已有传记，卡片内可隐藏避免重复 */
+  /** The reveal page already shows the biography on the right; hide it inside the card to avoid duplication */
   hideBiography?: boolean;
   onShare?: () => void;
 }

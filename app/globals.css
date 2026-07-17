@@ -33,7 +33,7 @@ body {
   color: var(--soul-fg);
 }
 
-/* 统一进度条动画 */
+/* Shared progress bar animation */
 @keyframes soul-shimmer {
   0% {
     opacity: 0.55;
